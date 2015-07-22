@@ -1,0 +1,67 @@
+
+
+keypad layout ideas.
+
+1..8 for presets under the LCD display
+"bank"
+"power"  (press for on, sleep.  somthing else (long press?) for hard shutdonw)
+"display"  choose from up to 4 display modes.
+one more spare to make 12 total?
+
+
+[pwr] 	  [      ...display unit....      ]  [disp]
+
+
+ [sp] 	   [1] [2] [3] [4]  [5] [6] [7] [8]  [B]
+
+
+total length of display-module PCB is just under 7.25"
+
+12 buttons, 3 rows, four columns.  
+series diodes in rows.  pull row low, then read columns.
+maybe pullups on columns.
+
+
+keypad: matrix.  6 GPIOs for up to 9 buttons, 7 for up to 12.
+
+keypad gpio: 5,6,13  26,7,12,16
+
+--
+
+
+keyswitches: 
+the ones we have in stock aren't availalble any more, and are kinda small anyway.
+
+
+consider
+http://www.digikey.com/product-detail/en/KS11R21CQE/CKN1590-ND/49816
+$1.51
+(cap available black, white, red, grey, blue)
+stackable 1/2" on center.  could do a single cutout in a panel for a row of them.
+
+http://www.digikey.com/product-detail/en/D6C10%20F2%20LFS/401-1983-ND/1466340
+C&K D6 series. several keycap colors.   
+
+D6C - $0.82. round base, square button top - need seperate cutout for each button.
+stackable 1/2" on center.
+0.29" square button without optional additional cap. kinda small, would want to
+space out anyway.   .6 or .7" center-to-center would be ok.
+
+adding seperate $0.50 BTND6 cap could allow close stacking in single rectangular hole?
+looks like they won't quite stack on 1/2" grid, however. 12.4mm width of BTBD6.
+5mm pin spacking (but 0.2" might work)
+
+--
+
+other possible components on keypad pcb
+- wiring to display
+- current limit for display backlight
+- control transistor for display backlight
+- one sleep/status LED
+
+--
+
+setup/scan code debug
+first attempt at scan loop:  1000 loops in 0.286396 sec; 3491.668554/sec
+(nothing else running on the RPi)
+

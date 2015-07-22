@@ -1,0 +1,189 @@
+
+streaming audio appliance with a raspberry pi
+lots of tutorials online.
+
+see also proj/ha/jukebox/Stream.notes
+
+
+http://www.instructables.com/id/Arduino-Raspberry-Pi-Internet-Radio/step5/Add-Radio-Streams-to-mpd/
+Unnecessarily uses an arduino to talk to the lcd+keypad.
+but does give some ideas.
+stores playlist in mpd, changes tracks with
+       mpd play <integer track number>
+
+usualpanic.com - another
+well organized code using mpc23017 lcd/keypad board like we have
+
+"a serial interface to the R-Pi that’s quite a bit slower than a
+directly connected LCD.  Polling for button changes in the same loop
+that handles the LCD made the buttons feel somewhat unresponsive.  The
+solution was to move the LCD display to a separate worker thread and
+to use a Python queue to pass update messages."
+we've got plenty of GPIOs on a raspi B+.  but the multi-thread
+framework might be useful.
+
+what do we want our UI to be?
+LCD strongly desired, to show current stream and track info if available from mpd.
+not interested in a menu system on the LCD
+6 or 8 preset buttons plus "off" (standby)
+anything else is gravy. maybe a "bank" button?
+maybe a "display mode" button?
+might be nice to sense when our output is selected on the av switch,
+and wake up then, so a contact-closure trigger input.
+Do a web interface for anything fancy, like changing presets.
+
+
+http://usualpanic.com/2013/05/raspberry-pi-internet-radio/
+with LCD and two buttons
+6 GPIOs used for parallel lcd
+
+
+http://raspberrypi.stackexchange.com/questions/12339/pulseaudio-mpd-http-streaming-installation-guide
+
+
+PyRadio (https://github.com/coderholic/pyradio)
+uses mplayer and/or vlc
+
+https://learn.adafruit.com/raspberry-pi-radio-player-with-touchscreen
+MPD-based streaming player using TFT touchscreen
+python UI code is called "radioplayer;" 
+https://learn.adafruit.com/system/assets/assets/000/019/200/original/Pi_Radio_player.zip
+
+adafruit python class for LCD display on raspPi
+  download/raspi/adafruit/Adafruit-Raspberry-Pi-Python-Code/Adafruit_CharLCD
+
+
+
+
+
+http://elinux.org/RPi_Low-level_peripherals
+
+		RPi A+,B+ GPIO: J8 40-pin header
+		--------------------------------
+		        +3V3 1  2   +5V
+		GPIO2   SDA1 3  4   +5V
+		GPIO3   SCL1 5  6   GND
+		GPIO4   GCLK 7  8   TXD0  GPIO14
+		         GND 9  10  RXD0  GPIO15
+		GPIO17  GEN0 11 12  GEN1  GPIO18
+		GPIO27  GEN2 13 14  GND
+		GPIO22  GEN3 15 16  GEN4  GPIO23
+		        +3V3 17 18  GEN5  GPIO24
+		GPIO10  MOSI 19 20  GND
+		GPIO9   MISO 21 22  GEN6  GPIO25
+		GPIO11  SCLK 23 24  CE0_N GPIO8
+		         GND 25 26  CE1_N GPIO7
+		EEPROM ID_SD 27 28  ID_SC EEPROM
+		GPIO5        29 30  GND
+		GPIO6        31 32        GPIO12
+		GPIO13       33 34  GND
+		GPIO19       35 36        GPIO16
+		GPIO26       37 38        GPIO20
+		         GND 39 40        GPIO21
+
+
+we want to add a high-quality audio board that uses the I2S interface on J5.
+(no seperate J5 on B+? J5 was: GPIO 28,29,30,31)
+
+https://www.hifiberry.com/
+https://www.hifiberry.com/dacplus
+	explicitly for model B+; has 40 pin gpio connector plus pass thru? yes.
+	prefer the 3.5mm jack version - lower height.  but out of stock.
+	then add off-board RCAs	directly on whatever case we find/print.
+
+https://www.hifiberry.com/guides/setting-up-volumio-to-get-great-audio/
+
+
+https://www.hifiberry.com/forums/topic/getting-hifiberry-dac-to-work-on-rpib-and-remotepi-board/
+
+https://www.hifiberry.com/guides/gpio-usage-of-the-hifiberry-products/
+
+Hifiberry uses GPIO 18..21 on the B+.  and GPIO2,3 for I2C.
+At the DAC+ you can solder an extra row of headers onto the board. These are connected in parallel to the original header.
+hifiberry audio out: The L/GND/R pins can be used to connect a cable.
+
+US distributor: http://store.camerontech.io/
+
+18 GPIOs left after: hifiberry, serial, i2c
+      4, 5, 6, 7,  8, 9, 10, 11,  12, 13, 14, 15,  17, 22, 23, 24,  26, 27
+
+
+5v LCD would need level converters - or can they handle TTL (3v) input only?
+	HD44780 and friends can run down to 2.7v
+	need 7 pins: 4 data, E, RS.   plus 1 for backlight enable.
+or might be worth using a serial lcd such as
+   http://www.adafruit.com/products/784
+or an i2c backpack.
+how many LCD characters? 
+do we want to read the track name without scrolling horizontally? yes.
+40x2 ought to do it.  prototype with old surplus displays, even though they
+need -5v on vcontrast pin and have high-power backlights.
+
+display gpio: 17,27,22,10,9,11
+
+keypad gpio: 5,6,13  26,7,12,16
+
+
+
+----
+
+mpd - after installation, seems to already be enabled in initd to start with system boot.
+
+mpc commands
+    mpc status
+    mpc clear - empty playlist
+    mpc add file|stream		add to playlist
+    mpc listall			list whole playlist
+    mpc play position		play nth entry in playlist
+    mpc playlist		- shows whole playlist.
+
+works.  volume 75-85% is decent line-level on rpi's builtin 1/8" jack.
+
+"mpc playlist" output changes to track name after it gets one:
+
+tell@rpi-bplus:~$ mpc playlist
+FUV Music 128k: The Decemberists - The Wrong Year
+http://scfire-mtc-aa06.stream.aol.com:80/stream/1046
+
+we'll want to keep our own station name list, but maybe show that whole string
+too.
+
+after stream failure, often get:
+tell@rpi-bplus:~$ mpc status
+volume: n/a   repeat: off   random: off   single: off   consume: off
+ERROR: problems decoding "http://wknc.sma.ncsu.edu:8000/wknchq.m3u"
+(need to catch and display that too)
+
+
+
+
+
+
+mpc status shows track name - after a short delay at stream start.
+tell@rpi-bplus:~$ mpc status
+FUV Music 128k: Mayer Hawthorne - Just Ain't Gonna Work Out
+[playing] #1/1   4:12/0:04 (100%)
+volume: 85%   repeat: off   random: off   single: off   consume: off
+
+builtin audio out has a bunch of hiss when mpd volume turned all the way down.
+(get the hifiberry)
+
+--
+
+tiny benchmark added to mpd-test.py - call status() repeatedly.
+     100 loops in 0.504583 sec; 198.183497/sec
+
+
+--
+
+tue june 24, 2015 - mystreambox started.  updates lcd with mpd status.
+ need to poll currentsong() to get track name from stations that support it.
+
+need to organize debug/stdout to go to a streambox logfile.
+
+nice to have:
+     per-station rules to prune the name string
+     e.g. s/FUV Music 128k/WFUV/
+
+
+

@@ -1,0 +1,102 @@
+#!/usr/bin/env python
+# -*- coding: utf-8 -*-
+
+import sys
+import pprint
+import time;
+from perlish import *
+
+from mpd import (MPDClient, CommandError)
+from socket import error as SocketError
+from Adafruit_CharLCD import Adafruit_CharLCD
+
+HOST = 'localhost'
+PORT = '6600'
+PASSWORD = False
+
+##
+CON_ID = {'host':HOST, 'port':PORT}
+##  
+
+## Some functions
+def mpdConnect(client, con_id):
+    try:
+        client.connect(**con_id)
+    except SocketError:
+        return False
+    return True
+
+def mpdAuth(client, secret):
+    try:
+        client.password(secret)
+    except CommandError:
+        return False
+    return True
+
+def mpdSetup():
+    client = MPDClient()
+    if mpdConnect(client, CON_ID):
+        print('Got connected!')
+    else:
+        print('fail to connect MPD server.')
+        return False
+    # Auth if password is set non False
+    if PASSWORD:
+        if mpdAuth(client, PASSWORD):
+            print('Pass auth!')
+        else:
+            print('Error trying to pass auth.')
+            client.disconnect()
+            return False
+
+    return client;
+
+def update_lcd(lcd, mpd, st):
+    lcd.setCursor(0, 0);
+
+    if(st['state'] == 'stop'):
+        nt = '[stopped]';
+    elif(st['state']== 'play'):
+        song = mpd.currentsong();
+        nt = song['name'] + ' ' + song['title'];
+    s = sprintf("%-40.40s", nt);
+    printf("[%s]\n", s);
+    lcd.message(s);
+
+def main():
+    lcd = Adafruit_CharLCD(pin_rs=17,
+                       pin_e=27,
+                       pins_db=[22,10,9,11]);
+    
+    printf("got LCD");
+    lcd.begin(40, 2)
+    lcd.clear()
+    lcd.message("telltronics streambox");
+
+    mpd = mpdSetup();
+    if(not mpd):
+        lcd.setCursor(0, 1);  # col,row
+        lcd.message("MPD connect failed.");
+        printf("MPD connect failed.");
+        sys.exit(1);
+
+    printf("connected");
+    status = mpd.status();
+    update_lcd(lcd, mpd, status);
+    t_now = time.time();
+    t_lastupdate = t_now;
+    while(True):
+        prev_st = status;
+        status = mpd.status();
+        t_now = time.time();
+        if(status['state'] != prev_st['state']
+           or status['song'] != prev_st['song']
+           or status['songid'] != prev_st['songid']
+           or t_now - t_lastupdate > 5):
+            update_lcd(lcd, mpd, status);
+            t_lastupdate = t_now;
+
+
+# Script starts here
+if __name__ == "__main__":
+    main()

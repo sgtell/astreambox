@@ -1,0 +1,99 @@
+
+hifiberry on raspbian
+I have the DAC+
+
+
+first tried:
+
+sudo apt-get update
+sudo apt-get upgrade
+
+then this should work:
+http://blog.koalo.de/2013/05/i2s-support-for-raspberry-pi.html
+
+/etc/modprobe.d/raspi-blacklist.conf:  remove/comment i2c-bcm2708
+
+(there is  blacklist snd-soc-pcm512x  ?  is that us?)
+
+which chip is on the hifiberry?
+Burr-Brown PCM5122
+http://www.ti.com/product/pcm5122/description
+sounds right: i2s for audio, i2c or spi for control.
+
+in etc/modules  snd_soc_hifiberry_dacplus ??  (from hifiberry.com)
+is there a codec on there anyway: does it matter?
+   yes, hifiberry page says volume controllable with alsamixer
+
+
+did:
+tell@rpi-bplus:/etc$ sudo modprobe snd_soc_bcm2708_i2s
+tell@rpi-bplus:/etc$ sudo modprobe snd_soc_bcm2708
+FATAL: Module snd_soc_bcm2708 not found.
+tell@rpi-bplus:/etc$ sudo modprobe bcm2708_dmaengine
+tell@rpi-bplus:/etc$ sudo modprobe  snd_soc_hifiberry_dacplus
+tell@rpi-bplus:/etc$ 
+tell@rpi-bplus:~$ sudo modprobe snd-soc-pcm512x
+
+
+"aplay -l" doesn't work unless root.
+then, still get only builtins:
+
+
+tell@rpi-bplus:~$ sudo aplay -l
+**** List of PLAYBACK Hardware Devices ****
+card 0: ALSA [bcm2835 ALSA], device 0: bcm2835 ALSA [bcm2835 ALSA]
+  Subdevices: 7/8
+  Subdevice #0: subdevice #0
+  Subdevice #1: subdevice #1
+  Subdevice #2: subdevice #2
+  Subdevice #3: subdevice #3
+  Subdevice #4: subdevice #4
+  Subdevice #5: subdevice #5
+  Subdevice #6: subdevice #6
+  Subdevice #7: subdevice #7
+card 0: ALSA [bcm2835 ALSA], device 1: bcm2835 ALSA [bcm2835 IEC958/HDMI]
+  Subdevices: 1/1
+  Subdevice #0: subdevice #0
+
+
+more info at https://www.hifiberry.com/guides/configuring-linux-3-18-x/
+- remove snd_bcm2834 from /etc/modules 
+- device tree overlay file in /etc/boot/config.txt
+dtoverlay=hifiberry-dacplus
+
+reboot, then get it:
+
+tell@rpi-bplus:~$ sudo aplay -l
+**** List of PLAYBACK Hardware Devices ****
+card 0: sndrpihifiberry [snd_rpi_hifiberry_dacplus], device 0: HiFiBerry DAC+ HiFi pcm512x-hifi-0 []
+  Subdevices: 0/1
+  Subdevice #0: subdevice #0
+tell@rpi-bplus:~$ 
+
+
+but mpc says:
+ERROR: problems opening audio device
+
+in mpd.log:
+Jun 03 02:40 : output: Failed to open "MPD PulseAudio Output" [pulse]: failed to connect: Access denied
+
+in syslog:
+Jun  3 02:40:33 rpi-bplus pulseaudio[2352]: [pulseaudio] protocol-native.c: Denied access to client with invalid authorization data.
+
+
+
+edit /usr/local/etc/pulse/system.pa and add:
+load-module module-native-protocol-unix auth-anonymous=1
+
+took a long delay for mpd to start streaming... 
+it jumped from WFUV to KCRW; next in the "playlist"
+gotta fix that.  or only put one stream in mpd at a time.
+
+anyway, the board works. 
+very quiet: no stray noise heard when streaming stopped.
+
+need stereo cable for testing.
+proceed to add the header.   it will extend the I2S pins to the breakout.
+with a quick test it works fine even with ribbon cable and pi-cobbler
+plugged into breadboard.
+

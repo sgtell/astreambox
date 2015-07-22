@@ -1,0 +1,58 @@
+
+character LCD display for audio streaming appliance.
+
+18 GPIOs left after: hifiberry, serial, i2c
+      4, 5, 6, 7,  8, 9, 10, 11,  12, 13, 14, 15,  17, 22, 23, 24,  26, 27
+
+lets start down the side:
+
+ gpio17	   RS	
+ gpio27	   E
+ gpio22	   DB4
+ gpio10	   DB5
+ gpio9	   DB6
+ gpio11	   DB7
+
+
+works using this:
+lcd = Adafruit_CharLCD(pin_rs=17,
+                       pin_e=27,
+                       pins_db=[22,10,9,11]);
+that handles 2-line display addressing nicely: newline moves to second line.
+
+
+our development display module - display size and character pitch:
+we'd like to make preset-select buttons match up and fit well.
+total length of display-module PCB is just under 7.25"
+left side has .8" from pcb to firstx character, for data connections
+right side has only .6" for backlight connections.
+
+whole display LCD is 1.355" high.
+
+
+39 characters in 5.68" or 144.45mm
+   approx .146" per character.
+
+approximate as .15"?   not good enough; off by almost half a character after 15.
+using .1" perfboard, we'll be fudging it a lot.
+
+7 .1" grids per button works OK for development panel,
+with 10 between buttons 4 and 5.
+
+
+--
+
+different display for final unit?
+
+- want more contrast, better color.  
+- avoid needing -5v supply for vcontrast
+- maybe white on blue?  
+- RGB would be nice,but can't find it.
+- maybe more efficient backlight
+- maybe thinner
+
+--
+
+writing 40 chars to LCD: 
+ 100 loops in 10.654202 sec; 9.385968/sec
+

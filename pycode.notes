@@ -1,0 +1,106 @@
+
+
+code: raspi has python 2.7
+mpd 0.16.0
+python-mpd vs. python-mpd2
+lets try python-mpd2
+
+apt-get install python-pip wants to install python 2.6??   skip that.
+
+git clone https://github.com/Mic92/python-mpd2.git
+
+first need:
+ sudo apt-get install python-setuptools
+
+then:
+python setup.py build
+sudo python setup.py install
+
+examples work, although not sure what to expect.
+
+mpd.status() returns:
+
+Current MPD state:
+{   'audio': '44100:24:2',
+    'bitrate': '128',
+    'consume': '0',
+    'elapsed': '146.413',
+    'error': 'problems decoding "http://scfire-mtc-aa06.stream.aol.com:80/stream/1046"',
+    'mixrampdb': '0.000000',
+    'mixrampdelay': 'nan',
+    'nextsong': '3',
+    'nextsongid': '3',
+    'playlist': '3',
+    'playlistlength': '9',
+    'random': '0',
+    'repeat': '0',
+    'single': '0',
+    'song': '2',
+    'songid': '2',
+    'state': 'play',
+    'time': '146:0',
+    'volume': '100',
+    'xfade': '0'}
+
+client.currentsong() gets:
+Current Song:
+{   'file': 'http://kcrw.ic.llnwd.net/stream/kcrw_live',
+    'id': '2',
+    'name': 'KCRW ON AIR: Music, NPR News, Arts and Talk',
+    'pos': '2'}
+
+
+Current Song:
+{   'file': 'http://wfuv-music.streamguys.org:80/music-hi',
+    'genre': 'Blues',
+    'id': '9',
+    'name': 'FUV Music 128k',
+    'pos': '0'}
+
+Current Song:
+{   'file': 'http://wfuv-music.streamguys.org:80/music-hi',
+    'genre': 'Blues',
+    'id': '9',
+    'name': 'FUV Music 128k',
+    'pos': '0',
+    'title': 'Battles - Leyendecker'}
+
+(cmd line client renders this as FUV Music 128k: Battles - Leyendecker)
+
+Current Song:
+{   'file': 'http://wknc.sma.ncsu.edu:8000/wknchq.ogg',
+    'id': '10',
+    'name': 'WKNC 88.1 FM Raleigh, NC',
+    'pos': '1',
+    'title': 'At The Gates - Death and the Labyrinth'}
+
+Current Song:
+{   'file': 'http://kcrw.ic.llnwd.net/stream/kcrw_live',
+    'id': '11',
+    'name': 'KCRW ON AIR: Music, NPR News, Arts and Talk',
+    'pos': '2'}
+
+Current Song:
+{   'file': 'http://listen.jazz88.org/ksds.mp3',
+    'id': '12',
+    'name': 'Jazz 88.3 FM - KSDS',
+    'pos': '3'}
+
+
+Current Song:
+{   'file': 'http://wbgo.streamguys.net:8000/',
+    'id': '13',
+    'name': 'wbgo mp3 128',
+    'pos': '4',
+    'title': '111205 Stream Pre Roll 2'}
+
+
+so, where there's a name and a title, we'll need to abbreviate to fit 
+it into one 40-char line.
+
+have a display-mode where we use both for current status (and don't
+show button labels)
+
+
+
+
