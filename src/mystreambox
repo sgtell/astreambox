@@ -2,10 +2,12 @@
 # -*- coding: utf-8 -*-
 
 import sys
+import os
 import pprint
 import time;
 from perlish import *
 
+from SgtMatrixKBD import SgtMatrixKBD;
 from mpd import (MPDClient, CommandError)
 from socket import error as SocketError
 from Adafruit_CharLCD import Adafruit_CharLCD
@@ -17,6 +19,8 @@ PASSWORD = False
 ##
 CON_ID = {'host':HOST, 'port':PORT}
 ##  
+
+mpd = False;
 
 ## Some functions
 def mpdConnect(client, con_id):
@@ -51,19 +55,92 @@ def mpdSetup():
 
     return client;
 
+def mpdStateDiff(st, pst):
+    if(type(st) != type(pst)):
+        print "mpdStateDiff type"
+        return True;
+    if(st['state'] != pst['state']):
+        print "mpdStateDiff state"
+        return True;
+
+    if(('song' in st) != ('song' in pst)):
+        print "mpdStateDiff songkey"
+        return True;
+    
+    if('song' in st and 'song' in pst
+       and st['song'] != pst['song']):
+        print "mpdStateDiff song"
+        return True;
+        
+    if(('songid' in st) != ('songid' in pst)):
+        print "mpdStateDiff songid key"
+        return True;
+
+    if('songid' in st != 'songid' in pst
+       and st['songid'] != pst['songid']):
+        print "mpdStateDiff songid"
+        return True
+
+    else:
+        return False
+       
+
 def update_lcd(lcd, mpd, st):
     lcd.setCursor(0, 0);
 
-    if(st['state'] == 'stop'):
-        nt = '[stopped]';
-    elif(st['state']== 'play'):
-        song = mpd.currentsong();
-        nt = song['name'] + ' ' + song['title'];
+    nt = '';
+    if(error in st):
+        nt = "ERR:"+st['error'];
+    else:
+        if(st['state'] == 'stop'):
+            nt = '[stopped]';
+        if(st['state'] == 'pause'):
+            nt = '[pause]';
+        elif(st['state']== 'play'):
+            song = mpd.currentsong();
+            nt = '';
+            if('name' in song):
+                nt += song['name'];
+            if('title' in song):
+                nt += song['title'];
+            if(len(nt) < 1):
+                nd = sprintf("%s:%s", song['id'], song['file']);
+            
     s = sprintf("%-40.40s", nt);
     printf("[%s]\n", s);
     lcd.message(s);
 
+def handle_buttons(keys, status):
+    global mpd;
+    state = status['state'];
+    for k in keys:	# note each key event is a string
+        if(k == 'P'):
+            if('error' in status):
+                printf("error state: trying pulse+mpd restart");
+                mpd.close();
+                os.system("service mpd stop");
+                os.system("service pulseaudio stop");
+                os.system("service pulseaudio start");
+                os.system("service mpd start");
+                mpd = mpdSetup();
+                return;
+
+            if(state != 'stop'):
+                printf("poweroff\n");
+                mpd.stop();
+            else:
+                printf("poweron.  todo: resume last stream\n");
+                
+        if(k >= '1' and k <= '8'):
+            pst = int(k);
+            printf("key %s; change to preset %d\n", k, pst-1);
+            mpd.play(pst-1);
+
+
+
 def main():
+    global mpd;
+    kb = SgtMatrixKBD();
     lcd = Adafruit_CharLCD(pin_rs=17,
                        pin_e=27,
                        pins_db=[22,10,9,11]);
@@ -87,12 +164,14 @@ def main():
     t_lastupdate = t_now;
     while(True):
         prev_st = status;
+        keys = kb.poll();
+        if(len(keys)>0):
+            handle_buttons(keys, status);
+
         status = mpd.status();
         t_now = time.time();
-        if(status['state'] != prev_st['state']
-           or status['song'] != prev_st['song']
-           or status['songid'] != prev_st['songid']
-           or t_now - t_lastupdate > 5):
+        if(t_now - t_lastupdate > 5
+           or mpdStateDiff(status, prev_st)):
             update_lcd(lcd, mpd, status);
             t_lastupdate = t_now;
 

@@ -29,7 +29,6 @@ class SgtMatrixKBD:
                         14: '',
                         15: ''};
 
-
         self.nkeys = len(self.pinR) * len(self.pinC);
         printf("nkeys=%d\n", self.nkeys);
         self.GPIO.setmode(GPIO.BCM)

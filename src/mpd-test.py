@@ -77,7 +77,14 @@ def main():
         nt = ' ';
     elif(st['state']== 'play'):
         song = client.currentsong();
-        nt = song['name'] + ' ' + song['title'];
+        nt = '';
+        if('name' in song):
+            nt += song['name'];
+        if('title' in song):
+            nt += song['title'];
+        if(len(nt) < 1):
+            nd = sprintf("%s:%s", song['id'], song['file']);
+
     s = sprintf("%-40.40s", nt);
     printf("[%s]\n", s);
 

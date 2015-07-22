@@ -101,6 +101,28 @@ it into one 40-char line.
 have a display-mode where we use both for current status (and don't
 show button labels)
 
+---
+
+ways things can fail:
+     current-song info may not contain 'title'
+
+    File "mystreambox", line 121, in main
+    or status['song'] != prev_st['song']
+
+status may not include 'song'
+song result may be empty
+
+mpc 
+ERROR: problems opening audio device
+status['error'] = 'problems opening audio device'
+
+restarting pulseaudio and then mpd cleared this failure.
+(consider ditching pulseaudio and using alsa directly)
+idea:
+if there's an error, do this restart when doing shutdown/power-button.
 
 
 
+error in mpd.status()
+      socket.error: [Errno 104] Connection reset by peer
+(while restarting mpd)

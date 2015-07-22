@@ -10,3 +10,9 @@ mpc add http://listen.jazz88.org/ksds.mp3
 
 mpc add http://wbgo.streamguys.net:8000/
 
+# also want WSHA WNYC WWOZ"
+mpc add http://live.wshafm.org/WSHA?MSWMExt=.asf
+
+mpc add http://fm939.wnyc.org/wnycfm
+
+mpc add http://50.31.135.43:80/wwoz-hi.mp3
