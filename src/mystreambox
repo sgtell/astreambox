@@ -89,7 +89,7 @@ def update_lcd(lcd, mpd, st):
     lcd.setCursor(0, 0);
 
     nt = '';
-    if(error in st):
+    if('error' in st):
         nt = "ERR:"+st['error'];
     else:
         if(st['state'] == 'stop'):
