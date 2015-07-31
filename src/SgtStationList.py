@@ -26,6 +26,14 @@ class SgtStationList:
     def __init__(self):
         self.list = [];
 
+    def length(self):
+        return len(self.list);
+
+    def calli(self, i):
+        return self.list[i].call;
+
+    def urli(self, i):
+        return self.list[i].url;
 
     def initfixed(self):  
         "init from fixed list for early testing"
@@ -34,18 +42,32 @@ class SgtStationList:
         self.list.append( SgtStationEntry("KCRW", "http://kcrw.ic.llnwd.net/stream/kcrw_live"));
         self.list.append( SgtStationEntry("KSDS", "http://listen.jazz88.org/ksds.mp3"));
         self.list.append( SgtStationEntry("WBGO", "http://wbgo.streamguys.net:8000"));
+        self.list.append( SgtStationEntry("WWOZ", "http://50.31.135.43:80/wwoz-hi.mp3"));
+        self.list.append( SgtStationEntry("WAMU", "http://wamu-1.streamguys.com:80"));
+        self.list.append( SgtStationEntry("KPCC", "http://live.scpr.org/kpcclive"));
 
     def printall(self):
         for i in range(0, len(self.list)):
-
             printf("[%2d] %s\n", i, self.list[i].str() );
 
+    def mpdplaylist(self, mpd):
+        mpd.clear();
+        for i in range(0, len(self.list)):
+            mpd.add(self.list[i].url);
+
+    def mpdchecklist(self, mpd):
+        plist = mpd.playlist()
+        print('\nMPD Playlist'); 
+        print str(plist);
+
+
+
+# test script starts here
 def main():
     ss = SgtStationList();
     ss.initfixed();
     ss.printall();
 
-# test script starts here
 if __name__ == "__main__":
     main()
 

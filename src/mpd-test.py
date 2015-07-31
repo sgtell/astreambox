@@ -40,7 +40,7 @@ def mpdAuth(client, secret):
     return True
 ##
 
-def main():
+def main(dobench):
     ## MPD object instance
     client = MPDClient()
     if mpdConnect(client, CON_ID):
@@ -70,11 +70,20 @@ def main():
     print('\nCurrent Song:'); 
     pp.pprint(song);
 
+    plist = client.playlist()
+    print('\nPlaylist'); 
+    pp.pprint(plist);
+
+#    decoders = client.decoders()
+#    print('\nDecoders'); 
+#    pp.pprint(decoders);
+
+
 #    print('\nMusic Library stats:')
 #    pp.pprint(client.stats())
 
     if(st['state'] == 'stop'):
-        nt = ' ';
+        nt = 'stopped';
     elif(st['state']== 'play'):
         song = client.currentsong();
         nt = '';
@@ -88,19 +97,24 @@ def main():
     s = sprintf("%-40.40s", nt);
     printf("[%s]\n", s);
 
-    nloops=100;
-    tstart = time.time();
-    for i in range(0,nloops):
-        st = client.status();
+    if(dobench):
+        nloops=100;
+        tstart = time.time();
+        for i in range(0,nloops):
+            st = client.status();
 
-    tend = time.time();
-    ttime = tend-tstart;
+        tend = time.time();
+        ttime = tend-tstart;
 
-    printf("%d loops in %f sec; %f/sec\n", nloops, ttime, nloops/ttime);
+        printf("%d loops in %f sec; %f/sec\n", nloops, ttime, nloops/ttime);
     
     client.disconnect()
     sys.exit(0)
 
 # Script starts here
 if __name__ == "__main__":
-    main()
+    if(len(sys.argv)>1 and sys.argv[1] == '--benchmark'):
+        dobench = 1
+    else:
+        dobench = 0
+    main(dobench)

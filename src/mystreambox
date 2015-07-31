@@ -8,6 +8,7 @@ import time;
 from perlish import *
 
 from SgtMatrixKBD import SgtMatrixKBD;
+from SgtStationList import SgtStationList;
 from mpd import (MPDClient, CommandError)
 from socket import error as SocketError
 from Adafruit_CharLCD import Adafruit_CharLCD
@@ -83,7 +84,18 @@ def mpdStateDiff(st, pst):
 
     else:
         return False
-       
+
+class SbStatus:
+   def  __init__(self):
+    	self.restarting = 0;
+
+
+def update_lcd_bottom(lcd, sl):
+    lcd.setCursor(0, 1);
+    for i in range(0, sl.length() ):
+        lcd.message( sprintf("%4s ", sl.calli(i)) );
+        if(i==3):
+            lcd.message(" ");
 
 def update_lcd(lcd, mpd, st):
     lcd.setCursor(0, 0);
@@ -110,13 +122,16 @@ def update_lcd(lcd, mpd, st):
     printf("[%s]\n", s);
     lcd.message(s);
 
-def handle_buttons(keys, status):
+def handle_buttons(keys, status, lcd):
     global mpd;
     state = status['state'];
     for k in keys:	# note each key event is a string
         if(k == 'P'):
             if('error' in status):
                 printf("error state: trying pulse+mpd restart");
+                lcd.setCursor(0, 0); 
+                lcd.message("restarting; stand by...  ");
+
                 mpd.close();
                 os.system("service mpd stop");
                 os.system("service pulseaudio stop");
@@ -140,7 +155,10 @@ def handle_buttons(keys, status):
 
 def main():
     global mpd;
+    sbstat = SbStatus();
     kb = SgtMatrixKBD();
+    sl = SgtStationList();
+    sl.initfixed();
     lcd = Adafruit_CharLCD(pin_rs=17,
                        pin_e=27,
                        pins_db=[22,10,9,11]);
@@ -152,12 +170,18 @@ def main():
 
     mpd = mpdSetup();
     if(not mpd):
-        lcd.setCursor(0, 1);  # col,row
+        lcd.setCursor(0, 0);  # col,row
         lcd.message("MPD connect failed.");
         printf("MPD connect failed.");
         sys.exit(1);
+    mpd.consume(0);
+    mpd.single(1);
 
     printf("connected");
+    sl.mpdplaylist(mpd);
+    sl.mpdchecklist(mpd);
+    update_lcd_bottom(lcd, sl);
+
     status = mpd.status();
     update_lcd(lcd, mpd, status);
     t_now = time.time();
@@ -166,7 +190,7 @@ def main():
         prev_st = status;
         keys = kb.poll();
         if(len(keys)>0):
-            handle_buttons(keys, status);
+            handle_buttons(keys, status, lcd);
 
         status = mpd.status();
         t_now = time.time();
