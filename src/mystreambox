@@ -5,6 +5,7 @@ import sys
 import os
 import pprint
 import time;
+import signal;
 from perlish import *
 
 from SgtMatrixKBD import SgtMatrixKBD;
@@ -21,7 +22,10 @@ PASSWORD = False
 CON_ID = {'host':HOST, 'port':PORT}
 ##  
 
+verbose = False;
+
 mpd = False;
+lcd = False;
 
 ## Some functions
 def mpdConnect(client, con_id):
@@ -97,7 +101,11 @@ def update_lcd_bottom(lcd, sl):
         if(i==3):
             lcd.message(" ");
 
+prev_lcd_status = "";
 def update_lcd(lcd, mpd, st):
+    global verbose;
+    global prev_lcd_status;
+    
     lcd.setCursor(0, 0);
 
     nt = '';
@@ -119,7 +127,9 @@ def update_lcd(lcd, mpd, st):
                 nd = sprintf("%s:%s", song['id'], song['file']);
             
     s = sprintf("%-40.40s", nt);
-    printf("[%s]\n", s);
+    if(s != prev_lcd_status or verbose):
+        printf("status:\"%s\"\n", s);
+        prev_lcd_status = s;
     lcd.message(s);
 
 def handle_buttons(keys, status, lcd):
@@ -151,10 +161,17 @@ def handle_buttons(keys, status, lcd):
             printf("key %s; change to preset %d\n", k, pst-1);
             mpd.play(pst-1);
 
+def clean_exit(signal, frame):
+        printf("\nsig %s caught!\n", str(signal) );
+        lcd.begin(40, 2)
+        lcd.clear()
+        lcd.message("streambox halted");
+        sys.exit(0);
 
 
 def main():
     global mpd;
+    global lcd;
     sbstat = SbStatus();
     kb = SgtMatrixKBD();
     sl = SgtStationList();
@@ -167,6 +184,9 @@ def main():
     lcd.begin(40, 2)
     lcd.clear()
     lcd.message("telltronics streambox");
+
+    signal.signal(signal.SIGINT, clean_exit);
+    signal.signal(signal.SIGTERM, clean_exit);
 
     mpd = mpdSetup();
     if(not mpd):

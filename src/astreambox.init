@@ -1,0 +1,64 @@
+#!/bin/sh
+#
+# astreambox - start/stop audio stream service
+#
+# chkconfig: 2345 98 2
+# description: controls steve's audio streaming appliance
+#
+### BEGIN INIT INFO
+# Provides:          sgt-streambox
+### END INIT INFO
+
+HUSR=root
+LOGDIR=/var/log/astreambox
+STREAMBOX=/home/tell/proj/astreambox/src/mystreambox
+WPID=$LOGDIR/watchd.pid
+WLOG=$LOGDIR/watchd.log
+SLOG=$LOGDIR/streambox.log
+
+
+NAME=atreambox
+DESC="Audio Streaming Appliance"
+DAEMON=/usr/local/bin/watchd
+
+# Source redhatish function libarary
+#. /etc/rc.d/init.d/functions
+# debianish function library
+. /lib/lsb/init-functions
+
+
+#PATH=$HA/bin:$PATH
+RETVAL=0
+
+case "$1" in
+    start)
+        rm -f $WPID
+	rm -f $WLOG
+	echo -n "Starting sgt-streambox:"
+	cd $HA
+	/usr/local/bin/watchd -u $HUSR -p $WPID -l $WLOG $STREAMBOX >> $SLOG
+	RETVAL=$?
+	echo
+	;;
+    stop)
+	echo -n "Shutting down sgt-streambox:"
+	kill `cat $WPID`
+	RETVAL=$?
+	echo
+	;;
+    restart)
+	kill -HUP `cat $WPID`
+	;;
+    status)
+#    	status guilfred
+        status_of_proc -p $WPID $DAEMON $NAME
+#	RETVAL=$?
+	;;
+
+    *)
+	echo "Usage: $0 {start|stop|restart}"
+	exit 2x
+	;;
+    esac
+exit $RETVAL
+

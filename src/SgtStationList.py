@@ -44,7 +44,12 @@ class SgtStationList:
         self.list.append( SgtStationEntry("WBGO", "http://wbgo.streamguys.net:8000"));
         self.list.append( SgtStationEntry("WWOZ", "http://50.31.135.43:80/wwoz-hi.mp3"));
         self.list.append( SgtStationEntry("WAMU", "http://wamu-1.streamguys.com:80"));
+        self.list.append( SgtStationEntry("WNYC", "http://fm939.wnyc.org/wnycfm.aac"));
+
         self.list.append( SgtStationEntry("KPCC", "http://live.scpr.org/kpcclive"));
+        self.list.append( SgtStationEntry("WSHA", "http://live.wshafm.org/WSHA?MSWMExt=.asf"));
+        self.list.append( SgtStationEntry("WNCU", "http://stream.publicbroadcasting.net/production/mp3/wncu/local-wncu-974743.mp3"));
+
 
     def printall(self):
         for i in range(0, len(self.list)):
