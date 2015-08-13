@@ -144,8 +144,6 @@ def handle_buttons(keys, status, lcd):
 
                 mpd.close();
                 os.system("service mpd stop");
-                os.system("service pulseaudio stop");
-                os.system("service pulseaudio start");
                 os.system("service mpd start");
                 mpd = mpdSetup();
                 return;

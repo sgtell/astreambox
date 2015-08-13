@@ -1,13 +1,22 @@
 #!/bin/sh
-#
-# astreambox - start/stop audio stream service
+
+### BEGIN INIT INFO
+# Provides:          sgt-streambox
+# Required-Start:    mpd
+# Required-Stop:
+# Default-Start:     2 3 4 5
+# Default-Stop:      0 1 6
+# Short-Description: streaming audio appliance UI
+# Description:       this controls the streambox UI on GPIO-attached display and
+#                    keypad
+### END INIT INFO
 #
 # chkconfig: 2345 98 2
 # description: controls steve's audio streaming appliance
 #
-### BEGIN INIT INFO
-# Provides:          sgt-streambox
-### END INIT INFO
+
+echo astreambox.init was here >> /tmp/astreambox.init.debug
+echo $0 $* >> /tmp/astreambox.init.debug
 
 HUSR=root
 LOGDIR=/var/log/astreambox
@@ -15,7 +24,6 @@ STREAMBOX=/home/tell/proj/astreambox/src/mystreambox
 WPID=$LOGDIR/watchd.pid
 WLOG=$LOGDIR/watchd.log
 SLOG=$LOGDIR/streambox.log
-
 
 NAME=atreambox
 DESC="Audio Streaming Appliance"
