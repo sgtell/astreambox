@@ -91,56 +91,91 @@ def mpdStateDiff(st, pst):
 
 class SbStatus:
    def  __init__(self):
-    	self.restarting = 0;
+       self.restarting = 0;
+       self.p_mstatus  = None;   # mpd.status() result
+       self.mstatus  = None;   # mpd.status() result
+       self.msong  = None;  # mpd.currentsong() result
 
+   def update_from_mpd(self):
+       self.p_mstatus = self.mstatus;
+       self.mstatus = mpd.status();
+       if(self.mstatus['state']== 'play'):
+           self.msong = mpd.currentsong();
+       else:
+           self.msong = dict();
 
-def update_lcd_bottom(lcd, sl):
-    lcd.setCursor(0, 1);
-    for i in range(0, sl.length() ):
-        lcd.message( sprintf("%4s ", sl.calli(i)) );
-        if(i==3):
-            lcd.message(" ");
+class SgtSBDisplay:
+    def __init__(self, lcd, sbstat, sl):
+        self.lcd = lcd;
+        self.sl = sl;
+        self.sbstat = sbstat;
+        self.t_lastupdate = 0;
+        self.verbose = False;
+        self.prev_lcd_status = "";
 
-prev_lcd_status = "";
-def update_lcd(lcd, mpd, st):
-    global verbose;
-    global prev_lcd_status;
+    def signon(self):
+        self.lcd.begin(40, 2)
+        self.lcd.clear()
+        self.lcd.message("telltronics streambox");
+
+    def fail_message(self, s):
+        self.lcd.setCursor(0, 0);  # col,row
+        self.lcd.message(s);
+        printf(s);
     
-    lcd.setCursor(0, 0);
-
-    nt = '';
-    if('error' in st):
-        nt = "ERR:"+st['error'];
-    else:
-        if(st['state'] == 'stop'):
-            nt = '[stopped]';
-        if(st['state'] == 'pause'):
-            nt = '[pause]';
-        elif(st['state']== 'play'):
-            song = mpd.currentsong();
-            nt = '';
-            if('name' in song):
-                nt += song['name'];
-            if('title' in song):
-                nt += song['title'];
-            if(len(nt) < 1):
-                nd = sprintf("%s:%s", song['id'], song['file']);
+    def update(self):
+        t_now = time.time();
+        if(t_now - self.t_lastupdate > 5
+           or mpdStateDiff(self.sbstat.mstatus, self.sbstat.p_mstatus)):
+            self.draw_lcd_top();
+            self.t_lastupdate = t_now;
+    
+    def draw_lcd_top(self):
+        self.lcd.setCursor(0, 0);
+        s = self.build_top_string();
+        lcd.message(s);
+    
+    def build_top_string(self):
+        nt = '';
+        st = self.sbstat.mstatus;
+        if('error' in st):
+            nt = "ERR:"+st['error'];
+        else:
+            if(st['state'] == 'stop'):
+                nt = '[stopped]';
+            if(st['state'] == 'pause'):
+                nt = '[pause]';
+            elif(st['state']== 'play'):
+                song = self.sbstat.msong;
+                nt = '';
+                if('name' in song):
+                    nt += song['name'];
+                if('title' in song):
+                    nt += song['title'];
+                if(len(nt) < 1):
+                    nt = sprintf("%s:%s", song['id'], song['file']);
             
-    s = sprintf("%-40.40s", nt);
-    if(s != prev_lcd_status or verbose):
-        printf("status:\"%s\"\n", s);
-        prev_lcd_status = s;
-    lcd.message(s);
+        s = sprintf("%-40.40s", nt);
+        if(s != self.prev_lcd_status or self.verbose):
+            printf("status:\"%s\"\n", s);
+            self.prev_lcd_status = s;
+        return s;
 
-def handle_buttons(keys, status, lcd):
+    def draw_lcd_bottom(self):
+        self.lcd.setCursor(0, 1);
+        for i in range(0, self.sl.length() ):
+            self.lcd.message( sprintf("%4s ", self.sl.calli(i)) );
+            if(i==3):
+                self.lcd.message(" ");
+
+def handle_buttons(keys, sbstat, disp):
     global mpd;
-    state = status['state'];
+    state = sbstat.mstatus['state'];
     for k in keys:	# note each key event is a string
         if(k == 'P'):
-            if('error' in status):
+            if('error' in sbstat.mstatus):
                 printf("error state: trying pulse+mpd restart");
-                lcd.setCursor(0, 0); 
-                lcd.message("restarting; stand by...  ");
+                disp.fail_message("restarting; stand by...  ");
 
                 mpd.close();
                 os.system("service mpd stop");
@@ -159,6 +194,7 @@ def handle_buttons(keys, status, lcd):
             printf("key %s; change to preset %d\n", k, pst-1);
             mpd.play(pst-1);
 
+# signal handler
 def clean_exit(signal, frame):
         printf("\nsig %s caught!\n", str(signal) );
         lcd.begin(40, 2)
@@ -177,20 +213,16 @@ def main():
     lcd = Adafruit_CharLCD(pin_rs=17,
                        pin_e=27,
                        pins_db=[22,10,9,11]);
-    
-    printf("got LCD");
-    lcd.begin(40, 2)
-    lcd.clear()
-    lcd.message("telltronics streambox");
 
+    disp = SgtSBDisplay(lcd, sbstat, sl);
+    disp.signon();
+    
     signal.signal(signal.SIGINT, clean_exit);
     signal.signal(signal.SIGTERM, clean_exit);
 
     mpd = mpdSetup();
     if(not mpd):
-        lcd.setCursor(0, 0);  # col,row
-        lcd.message("MPD connect failed.");
-        printf("MPD connect failed.");
+        disp.fail_message("MPD connect failed.");
         sys.exit(1);
     mpd.consume(0);
     mpd.single(1);
@@ -198,24 +230,18 @@ def main():
     printf("connected");
     sl.mpdplaylist(mpd);
     sl.mpdchecklist(mpd);
-    update_lcd_bottom(lcd, sl);
+    disp.draw_lcd_bottom();
 
-    status = mpd.status();
-    update_lcd(lcd, mpd, status);
-    t_now = time.time();
-    t_lastupdate = t_now;
+    sbstat.update_from_mpd();
+
+    disp.update();
     while(True):
-        prev_st = status;
         keys = kb.poll();
         if(len(keys)>0):
-            handle_buttons(keys, status, lcd);
+            handle_buttons(keys, sbstat, disp);
 
-        status = mpd.status();
-        t_now = time.time();
-        if(t_now - t_lastupdate > 5
-           or mpdStateDiff(status, prev_st)):
-            update_lcd(lcd, mpd, status);
-            t_lastupdate = t_now;
+        sbstat.update_from_mpd();
+        disp.update();
 
 
 # Script starts here
