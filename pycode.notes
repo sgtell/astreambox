@@ -121,8 +121,24 @@ restarting pulseaudio and then mpd cleared this failure.
 idea:
 if there's an error, do this restart when doing shutdown/power-button.
 
-
-
 error in mpd.status()
       socket.error: [Errno 104] Connection reset by peer
 (while restarting mpd)
+
+---
+mid-august 2015. 
+basics working for 8 presets, stored in the code itself.
+additional features:
+	display functions / display modes
+	multiple banks of presets
+
+both of those involve changes to the display code.
+maybe should do a display-manager class.
+perhaps try to stick to model-view-controller sort of approach to dividing
+up the code and classes.
+(https://en.wikipedia.org/wiki/Model%E2%80%93view%E2%80%93controller)
+
+SgtSBDisplay.py  - streambox display
+
+
+

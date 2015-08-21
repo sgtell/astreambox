@@ -40,6 +40,8 @@ with LCD and two buttons
 
 http://raspberrypi.stackexchange.com/questions/12339/pulseaudio-mpd-http-streaming-installation-guide
 
+https://wiki.archlinux.org/index.php/PulseAudio/Configuration
+general pulseaudio 
 
 PyRadio (https://github.com/coderholic/pyradio)
 uses mplayer and/or vlc
@@ -187,3 +189,116 @@ nice to have:
 
 
 
+--
+
+some mp3 stations fail to work.  they all seem to be 64kbit.
+trying with raspberry pi 2.
+
+as shipped, mpd is using alsa.
+try it that way first, then change to pulse like on the rpi1.
+
+
+http://wknc.sma.ncsu.edu:8000/wknchq - 128k, always worked
+http://wamu-1.streamguys.com:80  - never worked on rpi 1.
+				 works here
+				 top shows very low load; 3% for pd
+
+
+following http://raspberrypi.stackexchange.com/questions/12339/pulseaudio-mpd-http-streaming-installation-guide
+again.
+
+there is no asound.conf file initially. its empty on fedora too.
+mpd can't connect to pulse.
+
+Aug  3 03:39:25 sgt-rpi2 pulseaudio[2042]: [pulseaudio] protocol-native.c: Denied access to client with invalid authorization data.
+
+tried load-module module-native-protocol-unix  auth-cookie-enabled=0 
+
+last fix: 
+add mpd to group pulse-access 
+so it can read /var/run/pulse/.pulse-cookie
+then works with PA.
+
+top on rpi2:
+                                           %CPU
+12577 mpd       20   0  139m  17m 9508 S   8.6  2.3   0:06.19 mpd 
+12542 pulse      9 -11 90488 7128 6032 S   5.3  0.9   0:04.07 pulseaudio 
+12614 tell      20   0  4648 2496 2136 R   1.0  0.3   0:00.12 top 
+
+
+with pulse, WAMU stream fails.
+
+but WNYC stream does work on the rpi-2 with pulse.
+  PID USER      PR  NI  VIRT  RES  SHR S  %CPU %MEM    TIME+  COMMAND 
+12846 mpd       20   0  140m  18m  10m S  10.9  2.4   0:04.03 mpd 
+12811 pulse      9 -11 89464 7376 6052 S   3.6  1.0   0:01.17 pulseaudio 
+12875 tell      20   0  4648 2408 2048 R   0.7  0.3   0:00.05 top 
+
+
+so: 
+flip back to alsa, probably need to keep using the rpi2.
+- don't run pluseaudio
+- change mpd.conf
+
+----
+
+without pulse, on RPi2B:
+
+wvuv works
+wamu works
+kpcc works
+wnyc works
+Wsha works!
+
+some streams are really noisy.  
+lots of background noise.  probably 'caus the built-in audio out really sucks.
+
+more setup: 
+     apt-get install joe
+     apt-get install subversion
+     apt-get install emacs
+     scp  .bashrc .bash-funcs .bash-prompt sgt-rpi2:
+
+svn checkout svn+ssh://ariel/home/svn/astreambox
+
+---
+
+back to raspi 1B+; try without pulse.
+
+change mpd.conf
+stop pulse.  use ps to make sure its really stopped.
+
+add mpd to group 'audio'
+
+after startup, mpc takes a long time to respond initially.  but 
+eventually does and mpc works ok.
+
+plays OK with direct alsa.
+do see this in logs:
+Aug 08 22:18 : Failed to open mixer for 'MPD ALSA Output': no such mixer control: PCM
+
+1B+, direct alsa
+     WNYC - mpd taking 21% cpu
+     WGBP - mpd taking 9% cpu
+     WKNC - starts at 10.5%, settles down around 9.5%
+     WSHA - doesn't work  ERROR: problems decoding "http://live.wshafm.org/WSHA?MSWMExt=.asf"
+
+notice that this error appears in the mpd state reply even after mpd
+has gone on to play somthing else. how do we clear that?
+
+"mpc consume off" "mpc single off"
+doesn't seem to prevent it from going on to next
+steam in the playlist when this happens.
+
+ok, we'll use the Rpi-2B since more streams work with that.
+need to move the hifiberry over.
+
+    
+apt-get remove pulseaudio
+restart mpd
+
+Aug 12 04:24 : mixer: Failed to read mixer for 'RPi ALSA Device': no such mixer control: PCM
+
+WSHA fails - but it worked earlier? time of day/station issue?
+
+WNYC works

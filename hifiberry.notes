@@ -33,7 +33,7 @@ tell@rpi-bplus:/etc$ sudo modprobe bcm2708_dmaengine
 tell@rpi-bplus:/etc$ sudo modprobe  snd_soc_hifiberry_dacplus
 tell@rpi-bplus:/etc$ 
 tell@rpi-bplus:~$ sudo modprobe snd-soc-pcm512x
-
+ 
 
 "aplay -l" doesn't work unless root.
 then, still get only builtins:
@@ -58,7 +58,7 @@ card 0: ALSA [bcm2835 ALSA], device 1: bcm2835 ALSA [bcm2835 IEC958/HDMI]
 
 more info at https://www.hifiberry.com/guides/configuring-linux-3-18-x/
 - remove snd_bcm2834 from /etc/modules 
-- device tree overlay file in /etc/boot/config.txt
+- device tree overlay file in /boot/config.txt
 dtoverlay=hifiberry-dacplus
 
 reboot, then get it:
@@ -96,4 +96,19 @@ need stereo cable for testing.
 proceed to add the header.   it will extend the I2S pins to the breakout.
 with a quick test it works fine even with ribbon cable and pi-cobbler
 plugged into breadboard.
+
+----
+
+moved to raspi 2B. install about the same:
+
+comment out in /etc/modules:
+	snd-bcm2835
+add to /boot/config.txt 
+dtoverlay=hifiberry-dacplus
+
+tell@sgt-rpi2:~$ sudo aplay -l
+**** List of PLAYBACK Hardware Devices ****
+card 0: sndrpihifiberry [snd_rpi_hifiberry_dacplus], device 0: HiFiBerry DAC+ HiFi pcm512x-hifi-0 []
+  Subdevices: 1/1
+  Subdevice #0: subdevice #0
 
