@@ -94,7 +94,8 @@ class SbStatus:
        self.restarting = 0;
        self.p_mstatus  = None;   # mpd.status() result
        self.mstatus  = None;   # mpd.status() result
-       self.msong  = None;  # mpd.currentsong() result
+       self.msong    = None;  # mpd.currentsong() result
+       self.presetbank = 0;
 
    def update_from_mpd(self):
        self.p_mstatus = self.mstatus;
@@ -104,6 +105,13 @@ class SbStatus:
        else:
            self.msong = dict();
 
+   def bank_increment(self):
+       if(self.presetbank == 3):
+           self.presetbank = 0;
+       else:
+           self.presetbank += 1;
+       printf("presetbank=%d\n", self.presetbank);
+
 class SgtSBDisplay:
     def __init__(self, lcd, sbstat, sl):
         self.lcd = lcd;
@@ -111,7 +119,10 @@ class SgtSBDisplay:
         self.sbstat = sbstat;
         self.t_lastupdate = 0;
         self.verbose = False;
+        self.npstbuttons = 8;
         self.prev_lcd_status = "";
+        self.last_presetbank = sbstat.presetbank;
+        self.dispmode = 0;
 
     def signon(self):
         self.lcd.begin(40, 2)
@@ -129,6 +140,9 @@ class SgtSBDisplay:
            or mpdStateDiff(self.sbstat.mstatus, self.sbstat.p_mstatus)):
             self.draw_lcd_top();
             self.t_lastupdate = t_now;
+        if(self.last_presetbank != self.sbstat.presetbank):
+            self.draw_lcd_bottom();
+            self.last_presetbank = self.sbstat.presetbank;
     
     def draw_lcd_top(self):
         self.lcd.setCursor(0, 0);
@@ -161,14 +175,25 @@ class SgtSBDisplay:
             self.prev_lcd_status = s;
         return s;
 
+    def dispmode_increment(self):
+       if(self.dispmode == 3):
+           self.dispmode = 0;
+       else:
+           self.dispmode += 1;
+       printf("dispmode=%d\n", self.dispmode);
+
     def draw_lcd_bottom(self):
         self.lcd.setCursor(0, 1);
-        for i in range(0, self.sl.length() ):
-            self.lcd.message( sprintf("%4s ", self.sl.calli(i)) );
+        for i in range(0, self.npstbuttons):
+            sno = self.sbstat.presetbank * self.npstbuttons + i;
+            callstr = self.sl.calli(sno);
+            if(callstr == None):
+                callstr = '----';
+            self.lcd.message( sprintf("%4s ", callstr));
             if(i==3):
                 self.lcd.message(" ");
 
-def handle_buttons(keys, sbstat, disp):
+def handle_buttons(keys, sbstat, disp, sl):
     global mpd;
     state = sbstat.mstatus['state'];
     for k in keys:	# note each key event is a string
@@ -188,11 +213,22 @@ def handle_buttons(keys, sbstat, disp):
                 mpd.stop();
             else:
                 printf("poweron.  todo: resume last stream\n");
+
+        elif(k == 'B'):
+            sbstat.bank_increment();
+
+        elif(k == 'D'):
+            disp.dispmode_increment();
                 
-        if(k >= '1' and k <= '8'):
-            pst = int(k);
-            printf("key %s; change to preset %d\n", k, pst-1);
-            mpd.play(pst-1);
+        elif(k >= '1' and k <= '8'):
+            pst = int(k) - 1 + sbstat.presetbank * disp.npstbuttons;
+            scall = sl.calli(pst);
+            printf("key %s; change to preset %d %s\n", k, pst, str(scall));
+            if(scall):
+                mpd.play(pst);
+        else:
+            if(k[0] != '!'):
+                printf("key %s unbound\n", k);
 
 # signal handler
 def clean_exit(signal, frame):
@@ -238,7 +274,7 @@ def main():
     while(True):
         keys = kb.poll();
         if(len(keys)>0):
-            handle_buttons(keys, sbstat, disp);
+            handle_buttons(keys, sbstat, disp, sl);
 
         sbstat.update_from_mpd();
         disp.update();

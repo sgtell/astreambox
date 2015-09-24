@@ -30,10 +30,16 @@ class SgtStationList:
         return len(self.list);
 
     def calli(self, i):
-        return self.list[i].call;
+        if(i < len(self.list)):
+               return self.list[i].call;
+        else:
+            return None
 
     def urli(self, i):
-        return self.list[i].url;
+        if(i < len(self.list)):
+            return self.list[i].url;
+        else:
+            return None
 
     def initfixed(self):  
         "init from fixed list for early testing"
@@ -51,6 +57,12 @@ class SgtStationList:
         self.list.append( SgtStationEntry("WNCU", "http://stream.publicbroadcasting.net/production/mp3/wncu/local-wncu-974743.mp3"));
 
 
+    def writefile(self):
+        pass
+
+    def readfile(self):
+        pass
+
     def printall(self):
         for i in range(0, len(self.list)):
             printf("[%2d] %s\n", i, self.list[i].str() );
@@ -64,6 +76,7 @@ class SgtStationList:
         plist = mpd.playlist()
         print('\nMPD Playlist'); 
         print str(plist);
+        # future: check MPDs list agains ours, return status.
 
 
 

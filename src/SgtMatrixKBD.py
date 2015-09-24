@@ -13,8 +13,8 @@ class SgtMatrixKBD:
         self.pinR = [5,6,13];	 # TODO: should be arguments
         self.pinC = [26,7,12,16];
         self.keymap = { 0:  'P',
-                        1:  's',
-                        2:  'B',
+                        1:  'B',
+                        2:  's',
                         3:  'D',
                         4:  '1',
                         5:  '2',
