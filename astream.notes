@@ -302,3 +302,24 @@ Aug 12 04:24 : mixer: Failed to read mixer for 'RPi ALSA Device': no such mixer 
 WSHA fails - but it worked earlier? time of day/station issue?
 
 WNYC works
+
+---
+
+changed WVUV on-air doesn't work any more.
+ error parsing song numbers from: http://wfuv-onair.streamguys.org:80/onair-hi
+
+
+https://packages.debian.org/search?keywords=mpd
+
+raspbian mpd is 0.16.7.
+	 that's whats in debian wheezy oldstable
+current is 0.19.10.
+	that's found in debian sid unstable
+
+how to add other raspbian/debian releases to apt, 
+and pin versions of packages to various releases:
+https://www.raspberrypi.org/forums/viewtopic.php?f=66&t=47944
+
+
+http://jaqque.sbih.org/kplug/apt-pinning.html
+Apt-Pinning for Beginners
