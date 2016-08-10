@@ -1,4 +1,4 @@
-
+	
 character LCD display for audio streaming appliance.
 
 18 GPIOs left after: hifiberry, serial, i2c
@@ -51,8 +51,63 @@ different display for final unit?
 - maybe more efficient backlight
 - maybe thinner
 
+http://www.newhavendisplay.com/nhd0240azflgbw-p-392.html
+	yellow/green when backlit, grey when backlight off.
+	only +5v supply needed
+	backlight power on pin 15,16
+	+5v power supply
+	Vih logic input is 0.7vdd - 3.5v.  NO GOOD.
+	"ST7066U" controller
+
+http://www.digikey.com/product-detail/en/C-51850NFJ-SLW-ADN/73-1258-ND/769339
+	Kyocera C-51850NFJ-SLW-ADN
+	white LED backlightm black text on white background
+	Vih is 2.2v; should be OK with 3.3v logic
+	"control LSI NT3881 or equivalent" 
+	supposedly HD44780 compatible, maybe fussier timing
+	good viewing angle and orientation
+	nice datasheet.  good driver chip datasheet found.
+	$32. ordered one.
+
+http://www.digikey.com/product-detail/en/DMC-40202NY-LY-AZE-BDN/73-1341-ND/2179904
+	Kyocera DMC-40202NY-LY-AZE-BDN
+	similar, yellow/green.  even better viewing angle+orientation
+	will become non-stock at digikey when stock depleted
+
+
+several options at Mouser.com
+only one with white/blue color has rs232 interface and is non-stock.
+
+Mouser Part #: 696-LCM-S04002DSF Lumex #: LCM-S04002DSF
+	yellow/green backlight, grey when off
+	Vih is 2.2v; 5v only supply
+	backlight needs 210mA at 4.2-4.6v
+	probably 44780
+	this is the choice
+also available as Digi-Key Part Number	67-1765-ND; $40. ordered one.
+
+
 --
 
 writing 40 chars to LCD: 
  100 loops in 10.654202 sec; 9.385968/sec
+
+--
+
+need another GPIO for backlight control.
+ bcm/gpio 12 and 13 labeled as PWM0, PWM1 in pinout map at
+ http://pinout.xyz/
+could we use pwm for brightness control?
+might be handy.
+
+we're currently using those for keypad. but could change.
+      lets move keypad col 12 to BCM-GPIO 23 (pin 18)
+      and use GPIO12 (pwm0) for led control.
+      	  we can breadboard that.
+	  put jumpers on board for now.
+
+RPIO.PWM library can do dma-pwm on any gpio.
+RPi.GPIO that we're using has PWM subclass; claims software pwm but maybe 
+  good enough.  uses threads.
+https://sourceforge.net/p/raspberry-gpio-python/wiki/PWM/
 

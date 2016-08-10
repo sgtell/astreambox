@@ -63,25 +63,25 @@ http://elinux.org/RPi_Low-level_peripherals
 		RPi A+,B+ GPIO: J8 40-pin header
 		--------------------------------
 		        +3V3 1  2   +5V
-		GPIO2   SDA1 3  4   +5V
-		GPIO3   SCL1 5  6   GND
+hifi i2c	GPIO2   SDA1 3  4   +5V
+hifi i2c	GPIO3   SCL1 5  6   GND
 		GPIO4   GCLK 7  8   TXD0  GPIO14
 		         GND 9  10  RXD0  GPIO15
-		GPIO17  GEN0 11 12  GEN1  GPIO18
-		GPIO27  GEN2 13 14  GND
-		GPIO22  GEN3 15 16  GEN4  GPIO23
-		        +3V3 17 18  GEN5  GPIO24
-		GPIO10  MOSI 19 20  GND
-		GPIO9   MISO 21 22  GEN6  GPIO25
-		GPIO11  SCLK 23 24  CE0_N GPIO8
-		         GND 25 26  CE1_N GPIO7
+lcd_rs		GPIO17  GEN0 11 12  GEN1  GPIO18	hifiberry
+lcd_e		GPIO27  GEN2 13 14  GND
+lcd_d4		GPIO22  GEN3 15 16  GEN4  GPIO23
+		        +3V3 17 18  GEN5  GPIO24	C2 (new)
+lcd_d5		GPIO10  MOSI 19 20  GND
+lcd_d6		GPIO9   MISO 21 22  GEN6  GPIO25
+lcd_d7		GPIO11  SCLK 23 24  CE0_N GPIO8
+		         GND 25 26  CE1_N GPIO7		C1
 		EEPROM ID_SD 27 28  ID_SC EEPROM
-		GPIO5        29 30  GND
-		GPIO6        31 32        GPIO12
-		GPIO13       33 34  GND
-		GPIO19       35 36        GPIO16
-		GPIO26       37 38        GPIO20
-		         GND 39 40        GPIO21
+R3		GPIO5        29 30  GND
+R2		GPIO6        31 32        GPIO12	C2  (led pwm new)
+R1		GPIO13       33 34  GND
+hifiberry	GPIO19       35 36        GPIO16	C3
+C4		GPIO26       37 38        GPIO20	hifiberry
+		         GND 39 40        GPIO21	hifiberry
 
 
 we want to add a high-quality audio board that uses the I2S interface on J5.
@@ -323,3 +323,46 @@ https://www.raspberrypi.org/forums/viewtopic.php?f=66&t=47944
 
 http://jaqque.sbih.org/kplug/apt-pinning.html
 Apt-Pinning for Beginners
+---
+
+build mpc 0.19.10 on  viola (x86) 
+get an error like this on everything we throw at it:
+
+mpc play http://stream.publicbroadcasting.net/production/mp3/wncu/local-wncu-974743.mp3
+error parsing song numbers from: http://stream.publicbroadcasting.net/production/mp3/wncu/local-wncu-974743.mp3
+
+can't find that string anywhere in mpd source or binary.
+so its in some library.
+no, that string is in mpc the command line control tool.
+still, it isn't playing any of them.
+yep, found that msg 3 places in mpc source.  command.c queue.c
+
+Doh!  "mpc play" wants a playlist-number.
+mpc add, then mpc play 1.
+get this on mpd log
+curl: curl failed: The requested URL returned error: 404 File Not Found
+player: played "http://wfuv-music.streamguys.org:80/onair-hi"
+and this from mpc:
+ERROR: Failed to decode http://wfuv-music.streamguys.org:80/onair-hi
+other URL - yes, mpd on viola is working.
+
+then, wvuf on-air started working, or so it seemed.
+
+wierd! looks like wvuv works if is not in position 1?
+no not that; not working now (thursday evening)
+
+can't tell the difference between on-air and music streams except on weekends?
+
+launching xmms by clicking on the link from firefox works.
+its info window shows a different URL!
+	http://wfuv-onair.streamguys.org:80/onair-hi
+	that works.
+ok, got it - two parts of the url differ; server and trailing name.
+
+
+
+
+
+
+
+
