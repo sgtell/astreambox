@@ -1,0 +1,62 @@
+#!/usr/bin/env python
+
+import cgi
+import cgitb; cgitb.enable()  # for troubleshooting
+import sys
+
+sys.path.append('/home/tell/proj/astreambox/src');
+import SgtStationList;
+
+ss = SgtStationList.SgtStationList();
+ss.readfile("/var/lib/astreambox/stationlist.py");
+
+print "Content-type: text/html"
+print
+
+print """
+<html>
+
+<head><title>Preset Editor</title></head>
+
+<body>
+
+  <h3>Preset Editor</h3>
+"""
+
+form = cgi.FieldStorage()
+message = form.getvalue("message", "(no message)")
+
+#print "Length: %d<br>" % ss.length();
+
+
+print """
+
+  <p>Previous message: %s</p>
+
+  <p>form
+
+  <form method="post" action="pycgitest.py">
+    <p>message: <input type="text" name="message"/></p>
+  </form>
+""" % cgi.escape(message)
+
+
+print """
+<table><tr>
+<td>Preset</td>
+<td>Label</td>
+<td>URL</td>
+</tr>
+"""
+
+for i in range(0, ss.length()):
+    print "<tr><td>%d</td>"  % i
+    print "<td>%s</td>" % cgi.escape(ss.calli(i))
+    print "<td>%s</td>\n" % cgi.escape(ss.urli(i))
+print "</table>"
+
+print """
+<hr/>
+  </body>
+</html>
+"""
