@@ -34,14 +34,15 @@ class SgtStationList:
 
     def initfixed(self):  
         "init from fixed list for early testing"
-        self.append( "WFUV", "http://wfuv-onair.streamguys.org:80/onair-hi")
-        self.append( "FUV2", "http://wfuv-music.streamguys.org:80/music-hi")
-        self.append( "WKNC", "http://wknc.sma.ncsu.edu:8000/wknchq.ogg");
-        self.append( "KCRW", "http://kcrw.ic.llnwd.net/stream/kcrw_live");
+        self.append( "WFUV", "http://wfuv-onair.streamguys.org:80/onair-hi");
+#        self.append( "FUV2", "http://wfuv-music.streamguys.org:80/music-hi")
+        self.append( "WKNC", "http://173.193.205.96:7430/stream");
+        self.append( "KCRW", "https://kcrw.streamguys1.com/kcrw_128k_mp3_e24");
         self.append( "KSDS", "http://listen.jazz88.org/ksds.mp3");
-        self.append( "WBGO", "http://wbgo.streamguys.net:8000");
-        self.append( "WWOZ", "http://50.31.135.43:80/wwoz-hi.mp3");
+        self.append( "WBGO", "https://wbgo.streamguys1.com/wbgo128");
+        self.append( "WWOZ", "https://wwoz-sc.streamguys1.com/wwoz-hi.mp3");
         self.append( "WNYC", "http://fm939.wnyc.org/wnycfm.aac");
+        self.append( "KRVS", "http://playerservices.streamtheworld.com/api/livestream-redirect/krvsfm.mp3");
 
         self.append( "WAMU", "http://wamu-1.streamguys.com:80");
         self.append( "KPCC", "http://live.scpr.org/kpcclive");
