@@ -6,6 +6,7 @@ import sys
 import RPi.GPIO as GPIO
 from perlish import *
 
+kdebug = False
 
 class SgtMatrixKBD:
     def __init__(self):
@@ -63,15 +64,19 @@ class SgtMatrixKBD:
         codes = [];
         if(keybits != self.oldbits):
             delta = keybits ^ self.oldbits;
-            #printf("keybits: %03x  %03x\n", keybits, delta);
+            if(kdebug):
+                printf("keybits: %03x  %03x\n", keybits, delta);
 
             for k in range(0, self.nkeys):
                 m = 1<<k;
                 if(delta & m):
                     if(keybits & m):
-                        codes.append(k | 0x80);  # pullup: 1=release
+                        code = k | 0x80;  # pullup: 1=release
                     else:
-                        codes.append(k);	# press
+                        code = k;	# press
+                    if(kdebug):
+                        printf("keycode: %02x\n", code);
+                    codes.append(code);
                         
             self.oldbits = keybits;
         return codes;
@@ -91,6 +96,7 @@ class SgtMatrixKBD:
 
 def main():
     kb = SgtMatrixKBD();
+    kdebug = True
     while(True):
         syms = kb.poll();
         if(len(syms)>0):

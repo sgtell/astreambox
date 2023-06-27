@@ -8,6 +8,7 @@ import time;
 import signal;
 from perlish import *
 
+import RPi.GPIO as GPIO
 from SgtMatrixKBD import SgtMatrixKBD;
 from SgtStationList import SgtStationList;
 from mpd import (MPDClient, CommandError)
@@ -26,6 +27,7 @@ verbose = False;
 
 mpd = False;
 lcd = False;
+backlight_gpio = 24;
 
 ## Some functions
 def mpdConnect(client, con_id):
@@ -117,7 +119,7 @@ class SgtSBDisplay:
         self.lcd = lcd;
         self.sl = sl;
         self.sbstat = sbstat;
-        self.t_lastupdate = 0;
+        self.t_lastupdate = 0; 
         self.verbose = False;
         self.npstbuttons = 8;
         self.prev_lcd_status = "";
@@ -209,6 +211,7 @@ def handle_buttons(keys, sbstat, disp, sl):
                 return;
 
             if(state != 'stop'):
+                GPIO.output(backlight_gpio, 0);
                 printf("poweroff\n");
                 mpd.stop();
             else:
@@ -221,6 +224,7 @@ def handle_buttons(keys, sbstat, disp, sl):
             disp.dispmode_increment();
                 
         elif(k >= '1' and k <= '8'):
+            GPIO.output(backlight_gpio, 1);
             pst = int(k) - 1 + sbstat.presetbank * disp.npstbuttons;
             scall = sl.calli(pst);
             printf("key %s; change to preset %d %s\n", k, pst, str(scall));
@@ -229,6 +233,8 @@ def handle_buttons(keys, sbstat, disp, sl):
         else:
             if(k[0] != '!'):
                 printf("key %s unbound\n", k);
+
+        sys.stdout.flush()
 
 # signal handler
 def clean_exit(signal, frame):
@@ -250,6 +256,9 @@ def main():
                        pin_e=27,
                        pins_db=[22,10,9,11]);
 
+    
+    GPIO.setup(backlight_gpio, GPIO.OUT)
+    GPIO.output(backlight_gpio, 1);
     disp = SgtSBDisplay(lcd, sbstat, sl);
     disp.signon();
     
