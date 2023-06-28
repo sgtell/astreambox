@@ -36,7 +36,7 @@ class SgtStationList:
         "init from fixed list for early testing"
         self.append( "WFUV", "http://wfuv-onair.streamguys.org:80/onair-hi");
 #        self.append( "FUV2", "http://wfuv-music.streamguys.org:80/music-hi")
-        self.append( "WKNC", "http://173.193.205.96:7430/stream");
+        self.append( "WKNC", "https://streaming.live365.com/a45877");
         self.append( "KCRW", "https://kcrw.streamguys1.com/kcrw_128k_mp3_e24");
         self.append( "KSDS", "http://listen.jazz88.org/ksds.mp3");
         self.append( "WBGO", "https://wbgo.streamguys1.com/wbgo128");
@@ -45,16 +45,15 @@ class SgtStationList:
         self.append( "KRVS", "http://playerservices.streamtheworld.com/api/livestream-redirect/krvsfm.mp3");
 
         self.append( "WAMU", "http://wamu-1.streamguys.com:80");
-        self.append( "KPCC", "http://live.scpr.org/kpcclive");
-        self.append( "WSHA", "http://live.wshafm.org/WSHA?MSWMExt=.asf");
-        self.append( "WNCU", "http://stream.publicbroadcasting.net/production/mp3/wncu/local-wncu-974743.mp3");
-        self.append( "KLCK", "http://edgev1.den.echo.liquidcompass.net/KLCKFMMP3?ats=1");
-        self.append( "WJMU", "mms://streaming.millikin.edu/wjmu");
-        self.append( "WEXT", "http://live.str3am.com:2080/wext1");
+        self.append( "KPCC", "http://live.wostreaming.net/direct/southerncalipr-kpccfmmp3-imc.mp3?source=kpcc");
+#        self.append( "WSHA", "http://live.wshafm.org/WSHA?MSWMExt=.asf");
+#        self.append( "WNCU", "http://stream.publicbroadcasting.net/production/mp3/wncu/local-wncu-974743.mp3");
+        self.append( "WJMU", "http://ice24.securenetsystems.net/WJMU?type=.mp3");
+        self.append( "WEXT", "http://wmht.streamguys1.com/wext1");
         self.append( "WGFR", "http://wgfr.streamon.fm:8000/WGFR-24k.aac");
 
-        self.append( "WUNC", "http://mediaserver.wuncfm.unc.edu:8000/wunc128");
-        self.append( "UNC2", "http://marconi.wuncfm.unc.edu:8000/wunc_hd2_mp3");
+        self.append( "WUNC", "http://wunc-ice.streamguys1.com:80/wunc-128-mp3");
+        self.append( "UNC2", "http://wunc-ice.streamguys1.com:80/wunc-hd2-128-mp3");
         
     def writefile(self, fname):
         fp = open(fname,  "w");
