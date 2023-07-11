@@ -242,21 +242,21 @@ def clean_exit(signal, frame):
         lcd.begin(40, 2)
         lcd.clear()
         lcd.message("streambox halted");
+        GPIO.output(backlight_gpio, 0);
         sys.exit(0);
-
 
 def main():
     global mpd;
     global lcd;
     sbstat = SbStatus();
-    kb = SgtMatrixKBD();
+    kb = SgtMatrixKBD(pin_rows = [5,6,13],
+                      pin_columns = [16, 12, 7, 26]);
     sl = SgtStationList();
     sl.initfixed();
     lcd = Adafruit_CharLCD(pin_rs=17,
                        pin_e=27,
                        pins_db=[22,10,9,11]);
 
-    
     GPIO.setup(backlight_gpio, GPIO.OUT)
     GPIO.output(backlight_gpio, 1);
     disp = SgtSBDisplay(lcd, sbstat, sl);
@@ -288,7 +288,36 @@ def main():
         sbstat.update_from_mpd();
         disp.update();
 
-
+def iotest_main():  # too much of this duplicates main(); TODO: refactor.
+    global lcd;
+    signal.signal(signal.SIGINT, clean_exit);
+    signal.signal(signal.SIGTERM, clean_exit);
+    GPIO.setmode(GPIO.BCM)
+    GPIO.setup(backlight_gpio, GPIO.OUT)
+    GPIO.output(backlight_gpio, 1);
+    
+    kb = SgtMatrixKBD(pin_rows = [5,6,13],
+                      pin_columns = [16, 12, 7, 26]);
+    lcd = Adafruit_CharLCD(pin_rs=17,
+                       pin_e=27,
+                       pins_db=[22,10,9,11]);
+    lcd.begin(40, 2)
+    lcd.setCursor(0, 0);  # col,row
+    printf("sgt streambox matrix keypad test\n")
+    lcd.message("sgt streambox matrix keypad test")
+    while(True):
+        keycodes = kb.poll_keycodes()
+        for kc in keycodes:
+            sym = kb.code_to_symbol(kc)
+            printf("0x%02x   %s\n", kc, str(sym))
+            msg = sprintf("0x%02x  %s     ", kc, str(sym))
+            lcd.setCursor(0, 1);  # col,row
+            lcd.message(msg)
+    
+        
 # Script starts here
 if __name__ == "__main__":
-    main()
+    if(len(sys.argv) >= 1 and sys.argv[1] == "--iotest"):
+        iotest_main()
+    else:
+        main()

@@ -9,10 +9,10 @@ from perlish import *
 kdebug = False
 
 class SgtMatrixKBD:
-    def __init__(self):
+    def __init__(self, pin_rows=[5,6,13], pin_columns=[26,7,12,16]):
         self.GPIO = GPIO;
-        self.pinR = [5,6,13];	 # TODO: should be arguments
-        self.pinC = [26,7,12,16];
+        self.pinR = pin_rows;
+        self.pinC = pin_columns;
         self.keymap = { 0:  'P',
                         1:  'B',
                         2:  's',
@@ -38,8 +38,8 @@ class SgtMatrixKBD:
             GPIO.setup(self.pinR[r], GPIO.OUT)
             GPIO.output(self.pinR[r], 1);
         
-            for c in range(0,4):
-                GPIO.setup(self.pinC[c], GPIO.IN);
+        for c in range(0,4):
+            GPIO.setup(self.pinC[c], GPIO.IN);
 
         self.oldbits = self.read_raw();
 
@@ -60,6 +60,7 @@ class SgtMatrixKBD:
         return rawbits;
     
     def poll_keycodes(self):
+        global kdebug;
         keybits = self.read_raw();
         codes = [];
         if(keybits != self.oldbits):
@@ -81,22 +82,32 @@ class SgtMatrixKBD:
             self.oldbits = keybits;
         return codes;
 
+    def code_to_symbol(self, c):
+        cn = c & 0x7f
+        if cn in self.keymap:
+            if(c & 0x80):
+                return('!' + self.keymap[c & 0x7f]);
+            else:
+                return(self.keymap[c]);
+        else:
+            return None;
+            
     def poll(self):
         codes = self.poll_keycodes();
         syms = [];
         if(len(codes)>0):
             for c in codes:
-                if(c & 0x80):
-                    syms.append('!' + self.keymap[c & 0x7f]);
-                else:
-                    syms.append(self.keymap[c]);
+                sym = self.code_to_symbol(c)
+                if(sym):
+                    syms.append(sym)
         return syms;
-        
-    
 
 def main():
+    global kdebug;
     kb = SgtMatrixKBD();
     kdebug = True
+    raw = kb.read_raw()
+    printf("initial: 0x%03x\n", raw);
     while(True):
         syms = kb.poll();
         if(len(syms)>0):
@@ -105,10 +116,8 @@ def main():
     codes = kb.poll_keycodes();
     if(len(codes)>0):
         for c in codes:
-            if(c & 0x80):
-                printf("%3d up    %d\n", c, c&0x7f );
-            else:
-                printf("%3d press %d\n", c, c&0x7f );
+            sym = kb.code_to_symbol(c)
+            printf("0x02x   %s\n", c, str(sym))
 
 
 # Script starts here

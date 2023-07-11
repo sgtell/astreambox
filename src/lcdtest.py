@@ -1,10 +1,21 @@
-#!/usr/bin/python
+#!/usr/bin/env python
+# -*- coding: utf-8 -*-
 
 import sys
 import time;
-from subprocess import *
+import os
+import pprint
+import signal;
+from perlish import *
+
 from Adafruit_CharLCD import Adafruit_CharLCD
+from subprocess import *
 from datetime import datetime
+
+verbose = False;
+
+lcd = False;
+backlight_gpio = 24;
 
 def printf(format, *args):
      sys.stdout.write(str(format) % args)
