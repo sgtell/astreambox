@@ -1,6 +1,7 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
+from __future__ import print_function
 import sys
 import os
 import pprint
@@ -92,10 +93,15 @@ class SgtStationList:
         for i in range(0, self.length() ):
             mpd.add( self.urli(i) );
 
+    def mpdplaylist_one(self, mpd, entry):
+        if(entry >= 0 and entry < self.length()):
+            mpd.clear();
+            mpd.add( self.urli(entry) );
+
     def mpdchecklist(self, mpd):
         plist = mpd.playlist()
         print('\nMPD Playlist'); 
-        print str(plist);
+        print(str(plist));
         # future: check MPDs list agains ours, return status.
 
 

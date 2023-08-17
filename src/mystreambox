@@ -1,6 +1,7 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
+from __future__ import print_function
 import sys
 import os
 import pprint
@@ -11,6 +12,7 @@ from perlish import *
 import RPi.GPIO as GPIO
 from SgtMatrixKBD import SgtMatrixKBD;
 from SgtStationList import SgtStationList;
+from SgtNetInfo import SgtNetInfo
 from mpd import (MPDClient, CommandError)
 from socket import error as SocketError
 from Adafruit_CharLCD import Adafruit_CharLCD
@@ -64,28 +66,30 @@ def mpdSetup():
 
 def mpdStateDiff(st, pst):
     if(type(st) != type(pst)):
-        print "mpdStateDiff type"
+        print("mpdStateDiff type")
         return True;
     if(st['state'] != pst['state']):
-        print "mpdStateDiff state"
+        print("mpdStateDiff state")
         return True;
 
     if(('song' in st) != ('song' in pst)):
-        print "mpdStateDiff songkey"
+        print("mpdStateDiff songkey")
         return True;
     
     if('song' in st and 'song' in pst
        and st['song'] != pst['song']):
-        print "mpdStateDiff song"
+        print("mpdStateDiff song")
+        song = st['song']
+        printf("song: %s\n", str(song));
         return True;
         
     if(('songid' in st) != ('songid' in pst)):
-        print "mpdStateDiff songid key"
+        print("mpdStateDiff songid key")
         return True;
 
     if('songid' in st != 'songid' in pst
        and st['songid'] != pst['songid']):
-        print "mpdStateDiff songid"
+        print("mpdStateDiff songid")
         return True
 
     else:
@@ -107,6 +111,10 @@ class SbStatus:
        else:
            self.msong = dict();
 
+   def clear_state(self):
+       self.msong = None;
+       self.mstatus = None;
+           
    def bank_increment(self):
        if(self.presetbank == 3):
            self.presetbank = 0;
@@ -115,7 +123,8 @@ class SbStatus:
        printf("presetbank=%d\n", self.presetbank);
 
 class SgtSBDisplay:
-    def __init__(self, lcd, sbstat, sl):
+    """Manage the Audio Stream Box lcd display"""
+    def __init__(self, lcd, sbstat, sl, backlight_gpio=24):
         self.lcd = lcd;
         self.sl = sl;
         self.sbstat = sbstat;
@@ -125,11 +134,23 @@ class SgtSBDisplay:
         self.prev_lcd_status = "";
         self.last_presetbank = sbstat.presetbank;
         self.dispmode = 0;
+        self.last_dispmode = 0;
+        self.backlight_gpio = backlight_gpio
+        GPIO.setup(backlight_gpio, GPIO.OUT)
+        self.backlight(0);
+        self.playing = False
+        self.t_backlighttime = 0;
+        self.netinf = SgtNetInfo()
 
+    def backlight(self, onoff):
+        GPIO.output(self.backlight_gpio, onoff)
+        
     def signon(self):
         self.lcd.begin(40, 2)
         self.lcd.clear()
-        self.lcd.message("telltronics streambox");
+        self.lcd.message("Streambox by telltronics");
+        self.backlight(1);
+        self.t_backlighttime = time.time()
 
     def fail_message(self, s):
         self.lcd.setCursor(0, 0);  # col,row
@@ -139,46 +160,92 @@ class SgtSBDisplay:
     def update(self):
         t_now = time.time();
         if(t_now - self.t_lastupdate > 5
-           or mpdStateDiff(self.sbstat.mstatus, self.sbstat.p_mstatus)):
+           or mpdStateDiff(self.sbstat.mstatus, self.sbstat.p_mstatus)
+           or self.last_dispmode != self.dispmode):
             self.draw_lcd_top();
             self.t_lastupdate = t_now;
+            self.last_dispmode = self.dispmode;
         if(self.last_presetbank != self.sbstat.presetbank):
             self.draw_lcd_bottom();
             self.last_presetbank = self.sbstat.presetbank;
+            
+        if(self.playing):
+            self.backlight(1)
+            self.t_backlighttime = t_now
+        else:
+            if(t_now - self.t_backlighttime > 5):
+                self.backlight(0)
     
     def draw_lcd_top(self):
         self.lcd.setCursor(0, 0);
         s = self.build_top_string();
+        s = sprintf("%-40.40s", s);
         lcd.message(s);
-    
+
     def build_top_string(self):
+        if(self.dispmode >= 0 and self.dispmode <= 3):
+            return self.build_status_string(self.dispmode)
+        elif(self.dispmode == 4):
+            s = self.build_myurl_string()
+            printf("my URL: %s\n", s) 
+            return s
+        else:
+            return sprintf("dispmode %d?", self.dispmode)
+
+    def build_status_string(self, dispmode):
         nt = '';
         st = self.sbstat.mstatus;
         if('error' in st):
             nt = "ERR:"+st['error'];
+            self.playing = False
         else:
             if(st['state'] == 'stop'):
                 nt = '[stopped]';
+                self.playing = False
             if(st['state'] == 'pause'):
                 nt = '[pause]';
+                self.playing = False
             elif(st['state']== 'play'):
+                self.playing = True
                 song = self.sbstat.msong;
                 nt = '';
-                if('name' in song):
-                    nt += song['name'];
-                if('title' in song):
-                    nt += song['title'];
+                if(dispmode == 0):
+                    if('name' in song):
+                        nt += song['name'];
+                    if(len(nt) > 1):
+                        nt += " "
+                    if('title' in song):
+                        nt += song['title'];
+                elif(dispmode == 1):
+                    if('name' in song):
+                        nt += song['name'];
+                elif(dispmode == 2):
+                    if('title' in song):
+                        nt += song['title'];
+                elif(dispmode == 3):
+                    if('file' in song):
+                        nt += song['file'];
+
                 if(len(nt) < 1):
                     nt = sprintf("%s:%s", song['id'], song['file']);
             
-        s = sprintf("%-40.40s", nt);
+        #s = sprintf("%-40.40s", nt);
+        s = nt
         if(s != self.prev_lcd_status or self.verbose):
             printf("status:\"%s\"\n", s);
+            printf("  song: %s\n", str(self.sbstat.msong));
             self.prev_lcd_status = s;
         return s;
 
+    def build_myurl_string(self):
+        self.netinf.getinfo()
+        if(self.netinf.up):
+            return sprintf("http://%-32.32s", self.netinf.ipaddr)
+        else:
+            return "no network connection!"
+        
     def dispmode_increment(self):
-       if(self.dispmode == 3):
+       if(self.dispmode == 5):
            self.dispmode = 0;
        else:
            self.dispmode += 1;
@@ -205,15 +272,16 @@ def handle_buttons(keys, sbstat, disp, sl):
                 disp.fail_message("restarting; stand by...  ");
 
                 mpd.close();
-                os.system("service mpd stop");
-                os.system("service mpd start");
+                sbstat.clear_state();
+#                os.system("service mpd stop");
+#                os.system("service mpd start");
                 mpd = mpdSetup();
                 return;
 
             if(state != 'stop'):
-                GPIO.output(backlight_gpio, 0);
                 printf("poweroff\n");
                 mpd.stop();
+                sbstat.clear_state();
             else:
                 printf("poweron.  todo: resume last stream\n");
 
@@ -224,7 +292,6 @@ def handle_buttons(keys, sbstat, disp, sl):
             disp.dispmode_increment();
                 
         elif(k >= '1' and k <= '8'):
-            GPIO.output(backlight_gpio, 1);
             pst = int(k) - 1 + sbstat.presetbank * disp.npstbuttons;
             scall = sl.calli(pst);
             printf("key %s; change to preset %d %s\n", k, pst, str(scall));
@@ -238,12 +305,12 @@ def handle_buttons(keys, sbstat, disp, sl):
 
 # signal handler
 def clean_exit(signal, frame):
-        printf("\nsig %s caught!\n", str(signal) );
-        lcd.begin(40, 2)
-        lcd.clear()
-        lcd.message("streambox halted");
-        GPIO.output(backlight_gpio, 0);
-        sys.exit(0);
+    printf("\nsig %s caught!\n", str(signal) );
+    lcd.begin(40, 2)
+    lcd.clear()
+    lcd.message("streambox halted");
+    GPIO.output(backlight_gpio, 0)
+    sys.exit(0);
 
 def main():
     global mpd;
@@ -257,9 +324,7 @@ def main():
                        pin_e=27,
                        pins_db=[22,10,9,11]);
 
-    GPIO.setup(backlight_gpio, GPIO.OUT)
-    GPIO.output(backlight_gpio, 1);
-    disp = SgtSBDisplay(lcd, sbstat, sl);
+    disp = SgtSBDisplay(lcd, sbstat, sl, backlight_gpio=backlight_gpio);
     disp.signon();
     
     signal.signal(signal.SIGINT, clean_exit);
@@ -317,7 +382,7 @@ def iotest_main():  # too much of this duplicates main(); TODO: refactor.
         
 # Script starts here
 if __name__ == "__main__":
-    if(len(sys.argv) >= 1 and sys.argv[1] == "--iotest"):
+    if(len(sys.argv) >= 2 and sys.argv[1] == "--iotest"):
         iotest_main()
     else:
         main()
