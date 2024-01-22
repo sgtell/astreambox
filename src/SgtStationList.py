@@ -41,15 +41,16 @@ class SgtStationList:
         self.append( "KCRW", "https://kcrw.streamguys1.com/kcrw_128k_mp3_e24");
         self.append( "KSDS", "http://listen.jazz88.org/ksds.mp3");
         self.append( "WBGO", "https://wbgo.streamguys1.com/wbgo128");
-        self.append( "WWOZ", "https://wwoz-sc.streamguys1.com/wwoz-hi.mp3");
+#        self.append( "WWOZ", "https://wwoz-sc.streamguys1.com/wwoz-hi.mp3");
+        self.append( "WWOZ", "http://wwoz.org/listen/hi");
         self.append( "WNYC", "http://fm939.wnyc.org/wnycfm.aac");
         self.append( "KRVS", "http://playerservices.streamtheworld.com/api/livestream-redirect/krvsfm.mp3");
 
         self.append( "WAMU", "http://wamu-1.streamguys.com:80");
-        self.append( "KPCC", "http://live.wostreaming.net/direct/southerncalipr-kpccfmmp3-imc.mp3?source=kpcc");
+#        self.append( "KPCC", "http://live.wostreaming.net/direct/southerncalipr-kpccfmmp3-imc.mp3?source=kpcc");
 #        self.append( "WSHA", "http://live.wshafm.org/WSHA?MSWMExt=.asf");
 #        self.append( "WNCU", "http://stream.publicbroadcasting.net/production/mp3/wncu/local-wncu-974743.mp3");
-        self.append( "WJMU", "http://ice24.securenetsystems.net/WJMU?type=.mp3");
+#        self.append( "WJMU", "http://ice24.securenetsystems.net/WJMU?type=.mp3");
         self.append( "WEXT", "http://wmht.streamguys1.com/wext1");
         self.append( "WGFR", "http://wgfr.streamon.fm:8000/WGFR-24k.aac");
 
