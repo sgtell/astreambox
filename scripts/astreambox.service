@@ -1,0 +1,11 @@
+[Unit]
+Description=Audio Streaming device - UI using gpio keypad and LCD
+After=network.target mpd.service
+
+[Service]
+Restart=always
+User=astreambox
+ExecStart=/home/tell/proj/astreambox/src/mystreambox
+
+[Install]
+WantedBy = multi-user.target
