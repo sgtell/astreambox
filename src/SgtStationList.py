@@ -46,6 +46,7 @@ class SgtStationList:
         self.append( "WNYC", "http://fm939.wnyc.org/wnycfm.aac");
         self.append( "KRVS", "http://playerservices.streamtheworld.com/api/livestream-redirect/krvsfm.mp3");
 
+        self.append( "KEXP", "http://kexp.streamguys1.com/kexp160.aac");
         self.append( "WAMU", "http://wamu-1.streamguys.com:80");
 #        self.append( "KPCC", "http://live.wostreaming.net/direct/southerncalipr-kpccfmmp3-imc.mp3?source=kpcc");
 #        self.append( "WSHA", "http://live.wshafm.org/WSHA?MSWMExt=.asf");
